@@ -25,6 +25,12 @@
 
 ---
 
+## 🚀 WayMax Prototype
+
+[🔗 Click here to view the Figma prototype](https://www.figma.com/proto/LI5vYi2GLjdezYn5gWeUGV/WayMax?page-id=0%3A1&node-id=1-2&viewport=345%2C616%2C0.55&t=E1etdUw10wtXjA0Q-1&scaling=scale-down&content-scaling=fixed)
+
+---
+
 ## 🌟 What is WayMax?
 
 WayMax is a revolutionary open-source platform that transforms career development through the power of AI. Just as Baymax is a personal healthcare companion, WayMax serves as your dedicated career navigator, understanding your unique skills, aspirations, and learning style to forge the perfect path to professional success.
