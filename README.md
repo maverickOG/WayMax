@@ -25,7 +25,7 @@
 
 ---
 
-## 🚀 WayMax Prototype
+### 🚀 WayMax Prototype
 
 [🔗 Click here to view the Figma prototype](https://www.figma.com/proto/LI5vYi2GLjdezYn5gWeUGV/WayMax?page-id=0%3A1&node-id=1-2&viewport=345%2C616%2C0.55&t=E1etdUw10wtXjA0Q-1&scaling=scale-down&content-scaling=fixed)
 
