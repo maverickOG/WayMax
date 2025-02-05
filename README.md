@@ -16,7 +16,7 @@
 
 [Features](#-features) •
 [Tech Stack](#-tech-stack) •
-[Installation](#-installation) •
+[Installation](#-getting-started) •
 <!-- [Screenshots](#-screenshots) •
 [Roadmap](#-roadmap) • -->
 [Team](#-meet-the-team)
