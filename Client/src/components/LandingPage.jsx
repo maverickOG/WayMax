@@ -19,12 +19,26 @@ import {
   Code,
   ScrollText,
   ChevronUp,
+  User,
 } from "lucide-react";
+import { useUser, SignIn, SignUp } from "@clerk/clerk-react";
+import { useNavigate } from "react-router-dom";
 
 const LandingPage = () => {
   const [isVisible, setIsVisible] = useState(false);
+  const [showSignInModal, setShowSignInModal] = useState(false);
+  const [showSignUpModal, setShowSignUpModal] = useState(false);
   const { scrollYProgress } = useScroll();
   const scale = useTransform(scrollYProgress, [0, 1], [0.98, 1]);
+  const { isSignedIn, user } = useUser();
+  const navigate = useNavigate();
+
+  // Redirect if signed in
+  useEffect(() => {
+    if (isSignedIn) {
+      navigate("/dashboard");
+    }
+  }, [isSignedIn, navigate]);
 
   // Scroll to top functionality
   const toggleVisibility = () => {
@@ -144,8 +158,40 @@ const LandingPage = () => {
     },
   ];
 
+  // Modal Components
+  const SignInModal = () => (
+    <div
+      className={`fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 ${showSignInModal ? "" : "hidden"}`}
+    >
+      <div>
+        <button
+          onClick={() => setShowSignInModal(false)}
+          className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
+        ></button>
+        <SignIn />
+      </div>
+    </div>
+  );
+
+  const SignUpModal = () => (
+    <div
+      className={`fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 ${showSignUpModal ? "" : "hidden"}`}
+    >
+      <div>
+        <button
+          onClick={() => setShowSignUpModal(false)}
+          // className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
+        ></button>
+        <SignUp />
+      </div>
+    </div>
+  );
+
   return (
     <div className="w-full relative">
+      <SignInModal />
+      <SignUpModal />
+
       {/* Announcement Bar */}
       <div className="w-full h-9 bg-amber-100 flex items-center justify-center text-sm font-medium">
         🎉 New Course Alert: System Design Fundamentals - Learn More
@@ -154,7 +200,7 @@ const LandingPage = () => {
       {/* Navigation */}
       <nav className="bg-white py-6 px-8 border-b">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div className="text-2xl font-bold">LearnCS</div>
+          <div className="text-2xl font-bold">WayMax</div>
           <div className="flex items-center space-x-8">
             <a href="#" className="text-gray-700 hover:text-gray-900">
               Courses
@@ -168,9 +214,21 @@ const LandingPage = () => {
             <a href="#" className="text-gray-700 hover:text-gray-900">
               About
             </a>
-            <button className="px-6 py-2 bg-amber-200 rounded-lg hover:bg-amber-300 transition-colors">
-              Sign In
-            </button>
+            {isSignedIn ? (
+              <button
+                onClick={() => navigate("/dashboard")}
+                className="px-6 py-2 bg-amber-200 rounded-lg hover:bg-amber-300 transition-colors"
+              >
+                Dashboard
+              </button>
+            ) : (
+              <button
+                onClick={() => setShowSignInModal(true)}
+                className="px-6 py-2 bg-amber-200 rounded-lg hover:bg-amber-300 transition-colors"
+              >
+                Sign In
+              </button>
+            )}
           </div>
         </div>
       </nav>
@@ -186,13 +244,15 @@ const LandingPage = () => {
           <div className="space-y-8">
             <motion.h1
               className="text-6xl font-black leading-tight"
-              {...fadeIn}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
             >
               Master Computer Science Like Never Before
             </motion.h1>
             <motion.p
               className="text-2xl text-gray-700"
-              {...fadeIn}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
             >
               Interactive lessons, real-world projects, and AI-powered
@@ -200,13 +260,33 @@ const LandingPage = () => {
             </motion.p>
             <motion.div
               className="flex space-x-4"
-              {...fadeIn}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4 }}
             >
-              <button className="px-8 py-4 bg-amber-200 rounded-xl text-xl hover:bg-amber-300 transition-colors">
-                Get Started
-              </button>
-              <button className="px-8 py-4 border-2 border-amber-400 rounded-xl text-xl hover:bg-amber-100 transition-colors">
+              {isSignedIn ? (
+                <button
+                  onClick={() => navigate("/dashboard")}
+                  className="px-8 py-4 bg-amber-200 rounded-xl text-xl hover:bg-amber-300 transition-colors"
+                >
+                  Go to Dashboard
+                </button>
+              ) : (
+                <button
+                  onClick={() => setShowSignUpModal(true)}
+                  className="px-8 py-4 bg-amber-200 rounded-xl text-xl hover:bg-amber-300 transition-colors"
+                >
+                  Get Started
+                </button>
+              )}
+              <button
+                onClick={() => {
+                  document
+                    .getElementById("learning-paths")
+                    ?.scrollIntoView({ behavior: "smooth" });
+                }}
+                className="px-8 py-4 border-2 border-amber-400 rounded-xl text-xl hover:bg-amber-100 transition-colors"
+              >
                 View Curriculum
               </button>
             </motion.div>
@@ -276,16 +356,25 @@ const LandingPage = () => {
 
             {/* Chat Demo */}
             <div className="bg-white rounded-xl border-2 border-black p-6 space-y-4">
-              <div className="bg-amber-100/25 rounded-xl p-4">
-                <p className="text-lg">
-                  How can I understand recursion better?
-                </p>
+              {/* User Message */}
+              <div className="flex items-center space-x-4">
+                <User className="w-6 h-6 text-black -mt-0.5" />
+                <div className="bg-amber-100/25 rounded-xl p-4">
+                  <p className="text-lg">
+                    How can I understand recursion better?
+                  </p>
+                </div>
               </div>
-              <div className="bg-green-100/25 rounded-xl p-4">
-                <p className="text-lg">
-                  Let me explain recursion with a simple example and then break
-                  it down...
-                </p>
+
+              {/* AI Response */}
+              <div className="flex items-center space-x-4">
+                <Bot className="w-6 h-6 text-black -mt-0.5" />
+                <div className="bg-green-100/25 rounded-xl p-4">
+                  <p className="text-lg">
+                    Let me explain recursion with a simple example and then
+                    break it down...
+                  </p>
+                </div>
               </div>
             </div>
 
@@ -314,7 +403,7 @@ const LandingPage = () => {
       </section>
 
       {/* Learning Paths Section */}
-      <section className="py-24">
+      <section className="py-24" id="learning-paths">
         <div className="max-w-7xl mx-auto px-8">
           <h2 className="text-4xl font-bold mb-16">Learning Paths</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -366,7 +455,7 @@ const LandingPage = () => {
           >
             {/* Company Info */}
             <motion.div variants={itemVariants} className="space-y-6">
-              <h3 className="text-2xl font-bold">LearnCS</h3>
+              <h3 className="text-2xl font-bold">WayMax</h3>
               <p className="text-gray-400 leading-relaxed">
                 Empowering the next generation of developers with cutting-edge
                 computer science education and AI-powered learning assistance.
@@ -503,7 +592,7 @@ const LandingPage = () => {
               <div className="flex items-center space-x-2 text-gray-400">
                 <span>Made with</span>
                 <Heart className="w-4 h-4 text-red-500" />
-                <span>by the LearnCS Team</span>
+                <span>by the WayMax Team</span>
               </div>
               <div className="flex space-x-6 text-sm text-gray-400">
                 <a href="#" className="hover:text-white transition-colors">
