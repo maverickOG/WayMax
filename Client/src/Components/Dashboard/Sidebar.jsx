@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { BookOpen, Trophy, User, HelpCircle } from "lucide-react";
 import { UserProfile } from "@clerk/clerk-react";
+import { Link } from "react-router-dom"; // Import Link for navigation
 
 const Sidebar = () => {
   const [showUserProfile, setShowUserProfile] = useState(false);
@@ -30,23 +31,39 @@ const Sidebar = () => {
       <nav className="space-y-2">
         {[
           { icon: <BookOpen className="w-5 h-5" />, label: "Learn" },
-          { icon: <Trophy className="w-5 h-5" />, label: "Leaderboard" },
+          {
+            icon: <Trophy className="w-5 h-5" />,
+            label: "Leaderboard",
+            // Wrap the "Leaderboard" button in a Link component for navigation
+            component: (
+              <Link to="/leaderboard">
+                <button className="w-full flex items-center space-x-3 px-6 py-4 rounded-lg transition-all duration-200 hover:bg-[#C1BEFA] text-[#1D1D1D]/80">
+                  <Trophy className="w-5 h-5" />
+                  <span>Leaderboard</span>
+                </button>
+              </Link>
+            ),
+          },
           {
             icon: <User className="w-5 h-5" />,
             label: "Profile",
             onClick: () => setShowUserProfile(true),
           },
           { icon: <HelpCircle className="w-5 h-5" />, label: "FAQ" },
-        ].map((item, index) => (
-          <button
-            key={index}
-            onClick={item.onClick}
-            className="w-full flex items-center space-x-3 px-6 py-4 rounded-lg transition-all duration-200 hover:bg-[#C1BEFA] text-[#1D1D1D]/80"
-          >
-            {item.icon}
-            <span>{item.label}</span>
-          </button>
-        ))}
+        ].map((item, index) =>
+          item.component ? (
+            item.component
+          ) : (
+            <button
+              key={index}
+              onClick={item.onClick}
+              className="w-full flex items-center space-x-3 px-6 py-4 rounded-lg transition-all duration-200 hover:bg-[#C1BEFA] text-[#1D1D1D]/80"
+            >
+              {item.icon}
+              <span>{item.label}</span>
+            </button>
+          ),
+        )}
       </nav>
 
       {showUserProfile && (
