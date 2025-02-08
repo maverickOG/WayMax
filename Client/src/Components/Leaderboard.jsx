@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { useUser } from '@clerk/clerk-react';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 
 const Leaderboard = () => {
   const { user } = useUser();
@@ -10,7 +9,7 @@ const Leaderboard = () => {
   useEffect(() => {
     const fetchLeaderboard = async () => {
       try {
-        const response = await fetch('/api/leaderboard', {
+        const response = await fetch('http://localhost:3000/api/leaderboard', {
           headers: {
             'Authorization': `Bearer ${await user.getToken()}`
           }
@@ -38,11 +37,16 @@ const Leaderboard = () => {
   );
 
   return (
-    <Card className="w-full max-w-2xl mx-auto">
-      <CardHeader>
-        <CardTitle>XP Leaderboard</CardTitle>
-      </CardHeader>
-      <CardContent>
+    <div className="w-full max-w-2xl mx-auto bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden">
+      {/* Header Section */}
+      <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+          XP Leaderboard
+        </h2>
+      </div>
+
+      {/* Content Section */}
+      <div className="p-6">
         <div className="space-y-4">
           {/* Top 25 List */}
           <div className="space-y-2">
@@ -66,7 +70,7 @@ const Leaderboard = () => {
 
           {/* Current User Status (if not in top 25) */}
           {!isInTop25 && (
-            <div className="mt-6 p-4 border-t border-gray-200 dark:border-gray-700">
+            <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
               <div className="flex items-center justify-between bg-yellow-50 dark:bg-yellow-900 p-3 rounded">
                 <div className="flex items-center gap-3">
                   <span className="font-bold w-8">
@@ -86,8 +90,8 @@ const Leaderboard = () => {
             </div>
           )}
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 };
 

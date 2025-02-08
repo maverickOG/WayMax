@@ -1,32 +1,34 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
-const { ClerkExpressWithAuth } = require('@clerk/clerk-express');
 const connectDB = require('./Config/connectdb.js');
 const userRoutes = require('./routes/userroutes');
 const scraperRoutes = require('./routes/scraper');
+const { clerkMiddleware } = require('@clerk/express');
+require('dotenv').config();
+
 const PORT = process.env.PORT || 3000;
 const app = express();
 
-require('dotenv').config();
 connectDB();
+
+// Clerk middleware must be added before routes
+app.use(clerkMiddleware());
 
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Routes
 app.use('/api', scraperRoutes);
+app.use('/api', userRoutes);
 
-const clerk = ClerkExpressWithAuth({
-  secretKey: process.env.CLERK_SECRET_KEY
-});
-
-app.use('/api', clerk, userRoutes);
-
+// Error handling middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).json({
     message: 'Something went wrong!',
-    error: process.env.NODE_ENV === 'development' ? err.message : undefined
+    error: process.env.NODE_ENV === 'development' ? err.message : undefined,
   });
 });
 

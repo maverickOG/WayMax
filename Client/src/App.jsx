@@ -10,6 +10,7 @@ import "./App.css";
 
 function App() {
   return (
+    <>
     <header>
       <SignedOut>
         <SignInButton />
@@ -18,7 +19,8 @@ function App() {
       <SignedIn>
         <UserButton />
       </SignedIn>
-    </header>
+      </header>
+    </>
   );
 }
 
