@@ -7,13 +7,20 @@ const scraperRoutes = require('./routes/scraper');
 const { clerkMiddleware } = require('@clerk/express');
 require('dotenv').config();
 
+if (!process.env.CLERK_API_KEY || !process.env.CLERK_SECRET_KEY) {
+  throw new Error('Missing Clerk environment variables');
+}
+
 const PORT = process.env.PORT || 3000;
 const app = express();
+
+const recommendationRoutes = require('./routes/recommendations');
+app.use('/api/recommendations', recommendationRoutes);
 
 connectDB();
 
 // Clerk middleware must be added before routes
-app.use(clerkMiddleware());
+// app.use(clerkMiddleware());
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
