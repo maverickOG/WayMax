@@ -12,6 +12,7 @@ function App() {
         <Route path="/" element={<HomePage />} />
         <Route path="/auth" element={<AuthPage />} />
         <Route path="/leaderboard" element={<ComingSoon />} />
+        <Route path="/faqs" element={<ComingSoon />} />
         <Route path="/dashboard" element={<Dashboard />} />
       </Routes>
     </Router>
