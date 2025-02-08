@@ -1,7 +1,7 @@
 import { StrictMode } from "react";
 import "./index.css";
 import ReactDOM from "react-dom/client";
-import { ClerkProvider } from "@clerk/clerk-react"; // Ensure this import is included
+import { ClerkProvider } from "@clerk/clerk-react"; 
 import "./index.css";
 import App from "./App.jsx";
 

@@ -1,15 +1,6 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import HomePage from "./pages/HomePage";
 import AuthPage from "./pages/AuthPage";
-import {
-  SignedIn,
-  SignedOut,
-  SignInButton,
-  SignUp,
-  SignUpButton,
-  UserButton,
-} from "@clerk/clerk-react";
-import "./App.css";
 
 function App() {
   return (
