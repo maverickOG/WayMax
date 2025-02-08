@@ -6,7 +6,6 @@ import {
   SignUpButton,
   UserButton,
 } from "@clerk/clerk-react";
-import { useState } from "react";
 import "./App.css";
 
 function App() {
