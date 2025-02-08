@@ -1,7 +1,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
-const { ClerkExpressWithAuth } = require('@clerk/clerk-express');
+const { ClerkExpressWithAuth } = require('@clerk/clerk-sdk-node');
 const connectDB = require('./Config/connectdb.js');
 const userRoutes = require('./routes/userroutes');
 const scraperRoutes = require('./routes/scraper');
@@ -19,6 +19,9 @@ app.use('/api', scraperRoutes);
 const clerk = ClerkExpressWithAuth({
   secretKey: process.env.CLERK_SECRET_KEY
 });
+
+const chatbotRoutes = require('./routes/chatbot');
+app.use('/api/chatbot', chatbotRoutes);
 
 app.use('/api', clerk, userRoutes);
 
