@@ -1,6 +1,8 @@
-import { useState } from 'react';
+// Components/Dashboard/Chatbot.jsx
+import { useState, useEffect, useRef } from 'react';
 import { X, Send } from 'lucide-react';
-import axios from 'axios';
+import ChatService from '../../../services/chatService';
+import { useUser } from "@clerk/clerk-react";
 
 const Chatbot = ({ isOpen, onClose }) => {
   const [message, setMessage] = useState('');
@@ -8,6 +10,56 @@ const Chatbot = ({ isOpen, onClose }) => {
     { text: "Hello! I'm your AI learning assistant. How can I help you today?", isBot: true }
   ]);
   const [isLoading, setIsLoading] = useState(false);
+  const { user } = useUser();
+  const messagesEndRef = useRef(null);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
+  const sendMessage = async (e) => {
+    e.preventDefault();
+    if (message.trim()) {
+      const userMessage = { text: message, isBot: false };
+      setMessages(prev => [...prev, userMessage]);
+      setIsLoading(true);
+
+      try {
+        const response = await ChatService.sendMessage(message, user?.id || 'anonymous');
+        
+        let botResponse;
+        if (response.source === 'promptrepo') {
+          // Format PromptRepo response
+          botResponse = {
+            text: formatPromptRepoResponse(response.response[0]),
+            isBot: true,
+            isStructured: true
+          };
+        } else {
+          // Regular Gemini response
+          botResponse = {
+            text: response.response,
+            isBot: true
+          };
+        }
+
+        setMessages(prev => [...prev, botResponse]);
+      } catch (error) {
+        setMessages(prev => [...prev, {
+          text: "Sorry, I encountered an error. Please try again.",
+          isBot: true,
+          isError: true
+        }]);
+      } finally {
+        setIsLoading(false);
+        setMessage('');
+      }
+    }
+  };
 
   const formatPromptRepoResponse = (data) => {
     if (!data) return "Sorry, I couldn't process that request.";
@@ -32,42 +84,6 @@ Estimated completion time: ${data.estimated_completion}`;
     return JSON.stringify(data, null, 2);
   };
 
-  const sendMessage = async (e) => {
-    e.preventDefault();
-    if (message.trim()) {
-      setMessages(prev => [...prev, { text: message, isBot: false }]);
-      
-      setIsLoading(true);
-      try {
-        const response = await axios.post('http://localhost:3000/api/chatbot/chat', {
-          message: message,
-          sessionId: 'user123'
-        });
-
-        let formattedResponse;
-        if (response.data.source === 'promptrepo') {
-          formattedResponse = formatPromptRepoResponse(response.data.response[0]);
-        } else {
-          formattedResponse = response.data.response;
-        }
-
-        setMessages(prev => [...prev, { 
-          text: formattedResponse, 
-          isBot: true 
-        }]);
-      } catch (error) {
-        console.error('Chat error:', error);
-        setMessages(prev => [...prev, { 
-          text: "Sorry, I encountered an error. Please try again.", 
-          isBot: true 
-        }]);
-      } finally {
-        setIsLoading(false);
-        setMessage('');
-      }
-    }
-  };
-
   return (
     <div className="w-80 h-screen border-l border-[#E7E8FC] bg-white py-16 px-4">
       <div className="h-full flex flex-col">
@@ -86,9 +102,11 @@ Estimated completion time: ${data.estimated_completion}`;
                 msg.isBot
                   ? 'bg-[#E7E8FC] mr-auto'
                   : 'bg-[#C1BEFA] text-white ml-auto'
-              }`}
+              } ${msg.isError ? 'bg-red-100 text-red-600' : ''}`}
             >
-              {msg.text}
+              <pre className={`whitespace-pre-wrap ${msg.isStructured ? 'font-mono text-sm' : ''}`}>
+                {msg.text}
+              </pre>
             </div>
           ))}
           {isLoading && (
@@ -100,6 +118,7 @@ Estimated completion time: ${data.estimated_completion}`;
               </div>
             </div>
           )}
+          <div ref={messagesEndRef} />
         </div>
 
         <form onSubmit={sendMessage} className="mt-4">

@@ -1,5 +1,8 @@
+// Components/Dashboard/Roadmap.jsx
+import { useState } from 'react';
 import { BookOpenCheck, Code, Video, Puzzle, ChevronRight } from 'lucide-react';
 import { motion } from 'framer-motion';
+import CourseDetails from './CourseDetails';
 
 const learningPath = [
   {
@@ -63,6 +66,12 @@ const learningPath = [
 ];
 
 const Roadmap = () => {
+  const [selectedCourse, setSelectedCourse] = useState(null);
+
+  const handleCourseClick = (course) => {
+    setSelectedCourse(course);
+  };
+
   return (
     <div className="flex-1 h-screen overflow-y-auto py-16 px-36">
       <h2 className="text-4xl font-bold text-[#1D1D1D] mb-8">Your Learning Path</h2>
@@ -84,6 +93,7 @@ const Roadmap = () => {
                       ? 'border-[#7EBB94]/30 bg-[#7EBB94]/5' 
                       : 'border-[#E7E8FC] hover:border-[#C1BEFA]/50'
                   } transition-all duration-200 cursor-pointer group`}
+                  onClick={() => handleCourseClick(item)}
                 >
                   <div className="flex items-center space-x-4">
                     <div 
@@ -106,6 +116,13 @@ const Roadmap = () => {
           </div>
         ))}
       </div>
+
+      {selectedCourse && (
+        <CourseDetails 
+          course={selectedCourse} 
+          onClose={() => setSelectedCourse(null)} 
+        />
+      )}
     </div>
   );
 };
