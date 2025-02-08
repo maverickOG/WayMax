@@ -1,9 +1,11 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { BookOpen, Trophy, User, HelpCircle } from "lucide-react";
 import { UserProfile } from "@clerk/clerk-react";
+import { Link, useLocation } from "react-router-dom";
 
 const Sidebar = () => {
   const [showUserProfile, setShowUserProfile] = useState(false);
+  const location = useLocation();
 
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -21,42 +23,90 @@ const Sidebar = () => {
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [showUserProfile]);
 
+  const navigationItems = [
+    {
+      icon: BookOpen,
+      label: "Learn",
+      path: "/dashboard",
+      activeColor: "#C1BEFA"
+    },
+    {
+      icon: Trophy,
+      label: "Leaderboard",
+      path: "/leaderboard",
+      activeColor: "#FFDB98"
+    },
+    {
+      icon: User,
+      label: "Profile",
+      path: "/profile",
+      activeColor: "#C1BEFA",
+      onClick: () => setShowUserProfile(true)
+    },
+    {
+      icon: HelpCircle,
+      label: "FAQ",
+      path: "/faq",
+      activeColor: "#7EBB94"
+    }
+  ];
+
+  const isActivePath = (path) => {
+    if (path === "/dashboard") {
+      return location.pathname === "/" || location.pathname === path;
+    }
+    return location.pathname === path;
+  };
+
   return (
-    <div className="w-72 h-screen bg-white border-r border-[#E7E8FC] py-16 px-8 relative">
-      <div className="mb-8 px-4">
-        <h1 className="text-2xl font-bold text-[#1D1D1D]">WayMax</h1>
+    <div className="flex flex-col bg-white w-64 py-16 px-4 space-y-4">
+      <div className="px-4">
+        <h1 className="text-3xl font-bold text-gray-800">WayMax</h1>
       </div>
 
-      <nav className="space-y-2">
-        {[
-          { icon: <BookOpen className="w-5 h-5" />, label: "Learn" },
-          { icon: <Trophy className="w-5 h-5" />, label: "Leaderboard" },
-          {
-            icon: <User className="w-5 h-5" />,
-            label: "Profile",
-            onClick: () => setShowUserProfile(true),
-          },
-          { icon: <HelpCircle className="w-5 h-5" />, label: "FAQ" },
-        ].map((item, index) => (
-          <button
-            key={index}
-            onClick={item.onClick}
-            className="w-full flex items-center space-x-3 px-6 py-4 rounded-lg transition-all duration-200 hover:bg-[#C1BEFA] text-[#1D1D1D]/80"
-          >
-            {item.icon}
-            <span>{item.label}</span>
-          </button>
-        ))}
+      <nav className="flex-1 p-4">
+        <ul className="space-y-2">
+          {navigationItems.map((item) => {
+            const isActive = isActivePath(item.path);
+            const Icon = item.icon;
+
+            return (
+              <li key={item.label}>
+                <Link
+                  to={item.path}
+                  onClick={item.onClick}
+                  className={`
+                    flex items-center px-4 py-3 rounded-lg transition-all duration-200
+                    ${isActive 
+                      ? 'bg-opacity-20 font-medium' 
+                      : 'hover:bg-gray-100'
+                    }
+                  `}
+                  style={{
+                    backgroundColor: isActive ? item.activeColor : 'transparent',
+                  }}
+                >
+                  <Icon 
+                    className={`w-5 h-5 mr-3 ${isActive ? 'text-gray-800' : 'text-gray-600'}`}
+                  />
+                  <span className={`${isActive ? 'text-gray-800' : 'text-gray-600'}`}>
+                    {item.label}
+                  </span>
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
       </nav>
 
       {showUserProfile && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50"
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center"
           onClick={() => setShowUserProfile(false)}
         >
-          <div
-            className="relative"
-            onClick={(e) => e.stopPropagation()} // Prevents modal from closing when clicking inside
+          <div 
+            className="bg-white rounded-lg p-4"
+            onClick={(e) => e.stopPropagation()}
           >
             <UserProfile />
           </div>
