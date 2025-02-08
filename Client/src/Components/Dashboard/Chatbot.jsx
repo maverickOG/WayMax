@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { X, Send } from 'lucide-react';
-import axios from 'axios'; // Make sure to import axios
+import axios from 'axios';
 
 const Chatbot = ({ isOpen, onClose }) => {
   const [message, setMessage] = useState('');
@@ -9,30 +9,54 @@ const Chatbot = ({ isOpen, onClose }) => {
   ]);
   const [isLoading, setIsLoading] = useState(false);
 
+  const formatPromptRepoResponse = (data) => {
+    if (!data) return "Sorry, I couldn't process that request.";
+    
+    if (data.recommended_course_1) {
+      return `Here are some recommended courses:
+
+1. ${data.recommended_course_1} (${data.platform_1})
+   - Difficulty: ${data.difficulty_1}
+   - Duration: ${data.duration_1}
+   - Prerequisites: ${data.prerequisites_1}
+
+2. ${data.recommended_course_2} (${data.platform_2})
+   - Difficulty: ${data.difficulty_2}
+   - Duration: ${data.duration_2}
+   - Prerequisites: ${data.prerequisites_2}
+
+Recommended learning order: ${data.learning_order}
+Estimated completion time: ${data.estimated_completion}`;
+    }
+    
+    return JSON.stringify(data, null, 2);
+  };
+
   const sendMessage = async (e) => {
     e.preventDefault();
     if (message.trim()) {
-      // Add user message to chat
       setMessages(prev => [...prev, { text: message, isBot: false }]);
       
-      // Show loading state
       setIsLoading(true);
-      
       try {
-        // Make API call to your backend
         const response = await axios.post('http://localhost:3000/api/chatbot/chat', {
           message: message,
-          sessionId: 'user123' // You might want to generate this dynamically
+          sessionId: 'user123'
         });
 
-        // Add bot response to chat
+        let formattedResponse;
+        if (response.data.source === 'promptrepo') {
+          formattedResponse = formatPromptRepoResponse(response.data.response[0]);
+        } else {
+          formattedResponse = response.data.response;
+        }
+
         setMessages(prev => [...prev, { 
-          text: response.data.response, 
+          text: formattedResponse, 
           isBot: true 
         }]);
       } catch (error) {
         console.error('Chat error:', error);
-        // Show error message in chat
         setMessages(prev => [...prev, { 
           text: "Sorry, I encountered an error. Please try again.", 
           isBot: true 
