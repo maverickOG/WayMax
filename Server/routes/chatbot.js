@@ -28,43 +28,23 @@ Focus areas:
 - Cloud computing
 - Cybersecurity`;
 
-// Function to format course recommendations
-function formatCoursePrompt(userMessage) {
-  return `As an educational advisor, please help with: ${userMessage}
-
-Consider:
-- Skill level required
-- Time commitment
-- Prerequisites
-- Learning outcomes
-- Practical projects
-- Industry relevance
-
-Provide recommendations in a clear, structured format.`;
-}
-
 router.post('/chat', async (req, res) => {
   try {
-    const { message, sessionId, queryType } = req.body;
+    const { message, sessionId } = req.body;
     
     if (!sessionId) {
       return res.status(400).json({ error: 'Session ID is required' });
     }
 
+    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+
     // Get or create chat history
     if (!chatHistories.has(sessionId)) {
-      const model = genAI.getGenerativeModel({ model: "gemini-pro" });
       const chat = model.startChat({
-        history: [
-          {
-            role: "user",
-            parts: INITIAL_PROMPT,
-          },
-          {
-            role: "model",
-            parts: "I understand my role as an educational advisor. I'll provide tailored course recommendations and learning paths based on users' needs and goals.",
-          },
-        ],
+        history: [{
+          role: "user",
+          parts: [{ text: INITIAL_PROMPT }]
+        }],
         generationConfig: {
           maxOutputTokens: 2048,
           temperature: 0.7,
@@ -75,12 +55,8 @@ router.post('/chat', async (req, res) => {
 
     const chat = chatHistories.get(sessionId);
     
-    let formattedMessage = message;
-    if (queryType === 'course_recommendation') {
-      formattedMessage = formatCoursePrompt(message);
-    }
-
-    const result = await chat.sendMessage(formattedMessage);
+    // Send message with correct parts format
+    const result = await chat.sendMessage([{ text: message }]);
     const response = await result.response;
     const text = response.text();
     
@@ -95,6 +71,7 @@ router.post('/chat', async (req, res) => {
   }
 });
 
+// Simplified learning path endpoint
 router.post('/learning-path', async (req, res) => {
   try {
     const { goal, experience, timeCommitment, sessionId } = req.body;
@@ -111,9 +88,8 @@ router.post('/learning-path', async (req, res) => {
     4. Practice projects
     5. Milestones to track progress`;
 
-    // Use the existing chat mechanism with the specialized prompt
-    const chat = chatHistories.get(sessionId) || await initializeChat(sessionId);
-    const result = await chat.sendMessage(prompt);
+    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+    const result = await model.generateContent(prompt);
     const response = await result.response;
     
     res.json({ 
@@ -125,18 +101,5 @@ router.post('/learning-path', async (req, res) => {
     res.status(500).json({ error: 'Failed to generate learning path' });
   }
 });
-
-async function initializeChat(sessionId) {
-  const model = genAI.getGenerativeModel({ model: "gemini-pro" });
-  const chat = model.startChat({
-    history: [{ role: "user", parts: INITIAL_PROMPT }],
-    generationConfig: {
-      maxOutputTokens: 2048,
-      temperature: 0.7,
-    },
-  });
-  chatHistories.set(sessionId, chat);
-  return chat;
-}
 
 module.exports = router;
