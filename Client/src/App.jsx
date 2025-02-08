@@ -1,3 +1,6 @@
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import HomePage from "./pages/HomePage";
+import AuthPage from "./pages/AuthPage";
 import {
   SignedIn,
   SignedOut,
@@ -10,15 +13,12 @@ import "./App.css";
 
 function App() {
   return (
-    <header>
-      <SignedOut>
-        <SignInButton />
-        <SignUpButton />
-      </SignedOut>
-      <SignedIn>
-        <UserButton />
-      </SignedIn>
-    </header>
+    <Router>
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/auth" element={<AuthPage />} />
+      </Routes>
+    </Router>
   );
 }
 
