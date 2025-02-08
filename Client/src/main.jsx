@@ -1,6 +1,5 @@
 import { StrictMode } from "react";
-import { createRoot } from "react-dom/client";
-import React from "react";
+import "./index.css";
 import ReactDOM from "react-dom/client";
 import { ClerkProvider } from "@clerk/clerk-react"; // Ensure this import is included
 import "./index.css";
