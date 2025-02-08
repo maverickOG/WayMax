@@ -1,59 +1,46 @@
+// models/Course.js
 const mongoose = require('mongoose');
 
 const courseSchema = new mongoose.Schema({
   title: {
     type: String,
-    required: true,
-    trim: true
+    required: true
   },
   provider: {
     type: String,
     required: true,
-    enum: ['Coursera', 'Udemy', 'edX', 'freeCodeCamp']
+    enum: ['Coursera', 'Udemy']
+  },
+  description: {
+    type: String,
+    required: true,
+    default: 'No description available' // Fallback value
+  },
+  skillLevel: {
+    type: String,
+    enum: ['Beginner', 'Intermediate', 'Advanced', 'All Levels', 'Not Specified'], // Added more options
+    default: 'Not Specified'
+  },
+  duration: {
+    type: String,
+    default: 'Not specified'
   },
   url: {
     type: String,
     required: true,
     unique: true
   },
-  description: {
-    type: String,
-    required: true
-  },
-  skillLevel: {
-    type: String,
-    enum: ['Beginner', 'Intermediate', 'Advanced']
-  },
-  skills: [{
-    type: String,
-    trim: true
-  }],
-  duration: {
-    hours: Number,
-    weeks: Number
-  },
   rating: {
     type: Number,
-    min: 0,
-    max: 5
+    default: 0
   },
   reviewsCount: {
     type: Number,
     default: 0
   },
-  price: {
-    amount: Number,
-    currency: String
-  },
   lastScraped: {
     type: Date,
     default: Date.now
-  },
-  lastUpdated: Date,
-  status: {
-    type: String,
-    enum: ['active', 'inactive', 'pending'],
-    default: 'active'
   }
 }, { timestamps: true });
 

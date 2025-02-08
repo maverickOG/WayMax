@@ -10,7 +10,7 @@ const scraperService = new ScraperService();
 scraperService.initialize().catch(console.error);
 
 // Route to trigger scraping for a specific course
-router.post('/scrape-course', authenticateUser, authorizeAdmin, async (req, res) => {
+router.post('/scrape-course', async (req, res) => {
   try {
     const { url } = req.body;
     
@@ -40,7 +40,7 @@ router.post('/scrape-course', authenticateUser, authorizeAdmin, async (req, res)
 });
 
 // Route to get all scraped courses
-router.get('/courses', authenticateUser, async (req, res) => {
+router.get('/courses', async (req, res) => {
   try {
     const courses = await Course.find()
       .sort({ createdAt: -1 })

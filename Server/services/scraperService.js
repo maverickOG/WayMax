@@ -31,125 +31,150 @@ class ScraperService {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
 
-  async scrapeCourseraCourse(url) {
-    let page = null;
-    try {
-      console.log('Starting Coursera scraping for:', url);
-      page = await this.browser.newPage();
-      
-      // Set viewport and user agent
-      await page.setViewport({ width: 1366, height: 768 });
-      await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36');
+ // services/scraperService.js
+async scrapeCourseraCourse(url) {
+  let page = null;
+  try {
+    console.log('Starting Coursera scraping for:', url);
+    page = await this.browser.newPage();
+    
+    await page.setViewport({ width: 1366, height: 768 });
+    await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36');
 
-      // Navigate to URL
-      await page.goto(url, { 
-        waitUntil: 'networkidle0',
-        timeout: 60000 
-      });
+    await page.goto(url, { 
+      waitUntil: 'networkidle0',
+      timeout: 60000 
+    });
 
-      console.log('Page loaded, starting data extraction');
+    console.log('Page loaded, starting data extraction');
 
-      // Extract course data
-      const courseData = await page.evaluate(() => {
-        return {
-          title: document.querySelector('h1')?.textContent?.trim() || '',
-          description: document.querySelector('[data-test="course-description"]')?.textContent?.trim() || 
-                      document.querySelector('.description')?.textContent?.trim() || '',
-          rating: parseFloat(document.querySelector('[data-test="ratings-count-without-asterisk"]')?.textContent || 
-                           document.querySelector('.ratings-text')?.textContent || '0'),
-          reviewsCount: parseInt(document.querySelector('[data-test="number-of-ratings"]')?.textContent || 
-                               document.querySelector('.ratings-count')?.textContent || '0'),
-          instructor: document.querySelector('.instructor-name')?.textContent?.trim() || '',
-          skillLevel: document.querySelector('.difficulty')?.textContent?.trim() || 'Not specified',
-          duration: document.querySelector('.duration')?.textContent?.trim() || 'Not specified'
+    // Extract course data
+    const courseData = await page.evaluate(() => {
+      const getDescription = () => {
+        const descElement = document.querySelector('[data-test="course-description"]') || 
+                          document.querySelector('.description') ||
+                          document.querySelector('.about-section');
+        return descElement ? descElement.textContent.trim() : 'No description available';
+      };
+
+      const getSkillLevel = () => {
+        const levelElement = document.querySelector('.difficulty') ||
+                           document.querySelector('[data-test="difficulty"]');
+        const level = levelElement ? levelElement.textContent.trim() : 'Not Specified';
+        // Map to valid enum values
+        const levelMap = {
+          'Beginner': 'Beginner',
+          'Intermediate': 'Intermediate',
+          'Advanced': 'Advanced',
+          'All Levels': 'All Levels',
+          'Not Specified': 'Not Specified'
         };
-      });
+        return levelMap[level] || 'Not Specified';
+      };
 
-      // Clean and validate the data
-      const course = new Course({
-        ...courseData,
-        provider: 'Coursera',
-        url,
-        lastScraped: new Date()
-      });
+      return {
+        title: document.querySelector('h1')?.textContent?.trim() || 'Untitled Course',
+        description: getDescription(),
+        rating: parseFloat(document.querySelector('[data-test="ratings-count-without-asterisk"]')?.textContent || '0'),
+        reviewsCount: parseInt(document.querySelector('[data-test="number-of-ratings"]')?.textContent || '0'),
+        skillLevel: getSkillLevel(),
+        duration: document.querySelector('.duration')?.textContent?.trim() || 'Not specified'
+      };
+    });
 
-      // Save to database
-      await course.save();
-      console.log('Successfully scraped and saved course:', courseData.title);
+    // Create course document
+    const course = new Course({
+      ...courseData,
+      provider: 'Coursera',
+      url,
+      lastScraped: new Date()
+    });
 
-      await page.close();
-      return course;
+    await course.save();
+    console.log('Successfully scraped and saved course:', courseData.title);
 
-    } catch (error) {
-      console.error('Error scraping Coursera course:', error);
-      if (page) await page.close();
-      throw error;
-    }
+    await page.close();
+    return course;
+
+  } catch (error) {
+    console.error('Error scraping Coursera course:', error);
+    if (page) await page.close();
+    throw error;
   }
+}
 
-  async scrapeUdemyCourse(url) {
-    let page = null;
-    try {
-      console.log('Starting Udemy scraping for:', url);
-      page = await this.browser.newPage();
-      
-      await page.setViewport({ width: 1366, height: 768 });
-      await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36');
+async scrapeUdemyCourse(url) {
+  let page = null;
+  try {
+    console.log('Starting Udemy scraping for:', url);
+    page = await this.browser.newPage();
+    
+    await page.setViewport({ width: 1366, height: 768 });
+    await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36');
 
-      await page.goto(url, { 
-        waitUntil: 'networkidle0',
-        timeout: 60000 
-      });
+    await page.goto(url, { 
+      waitUntil: 'networkidle0',
+      timeout: 60000 
+    });
 
-      console.log('Page loaded, starting data extraction');
+    console.log('Page loaded, starting data extraction');
 
-      // Extract course data
-      const courseData = await page.evaluate(() => {
-        return {
-          title: document.querySelector('.udlite-heading-xl')?.textContent?.trim() || 
-                 document.querySelector('h1')?.textContent?.trim() || '',
-          description: document.querySelector('[data-purpose="lead-headline"]')?.textContent?.trim() ||
-                      document.querySelector('.course-description')?.textContent?.trim() || '',
-          rating: parseFloat(document.querySelector('[data-purpose="rating-number"]')?.textContent || '0'),
-          reviewsCount: parseInt(document.querySelector('[data-purpose="reviews-text"]')?.textContent?.match(/\d+/)?.[0] || '0'),
-          instructor: document.querySelector('[data-purpose="instructor-name-top"]')?.textContent?.trim() || '',
-          skillLevel: document.querySelector('[data-purpose="skill-level"]')?.textContent?.trim() || 'Not specified',
-          duration: document.querySelector('[data-purpose="course-duration"]')?.textContent?.trim() || 'Not specified'
+    // Extract course data
+    const courseData = await page.evaluate(() => {
+      const getDescription = () => {
+        const descElement = document.querySelector('[data-purpose="lead-headline"]') || 
+                          document.querySelector('.course-description') ||
+                          document.querySelector('[data-purpose="course-description"]');
+        return descElement ? descElement.textContent.trim() : 'No description available';
+      };
+
+      const getSkillLevel = () => {
+        const levelElement = document.querySelector('[data-purpose="skill-level"]') ||
+                           document.querySelector('.course-meta-level');
+        const level = levelElement ? levelElement.textContent.trim() : 'All Levels';
+        // Map Udemy levels to our enum values
+        const levelMap = {
+          'Beginner Level': 'Beginner',
+          'Intermediate Level': 'Intermediate',
+          'Expert Level': 'Advanced',
+          'All Levels': 'All Levels',
+          'Not Specified': 'Not Specified'
         };
-      });
+        return levelMap[level] || 'All Levels';
+      };
 
-      // Clean and validate the data
-      const course = new Course({
-        ...courseData,
-        provider: 'Udemy',
-        url,
-        lastScraped: new Date()
-      });
+      return {
+        title: document.querySelector('.udlite-heading-xl')?.textContent?.trim() || 
+               document.querySelector('h1')?.textContent?.trim() || 'Untitled Course',
+        description: getDescription(),
+        rating: parseFloat(document.querySelector('[data-purpose="rating-number"]')?.textContent || '0'),
+        reviewsCount: parseInt(document.querySelector('[data-purpose="reviews-text"]')?.textContent?.match(/\d+/)?.[0] || '0'),
+        instructor: document.querySelector('[data-purpose="instructor-name-top"]')?.textContent?.trim() || 'Unknown Instructor',
+        skillLevel: getSkillLevel(),
+        duration: document.querySelector('[data-purpose="course-duration"]')?.textContent?.trim() || 'Duration not specified'
+      };
+    });
 
-      // Save to database
-      await course.save();
-      console.log('Successfully scraped and saved course:', courseData.title);
+    // Create course document
+    const course = new Course({
+      ...courseData,
+      provider: 'Udemy',
+      url,
+      lastScraped: new Date()
+    });
 
-      await page.close();
-      return course;
+    await course.save();
+    console.log('Successfully scraped and saved course:', courseData.title);
 
-    } catch (error) {
-      console.error('Error scraping Udemy course:', error);
-      if (page) await page.close();
-      throw error;
-    }
+    await page.close();
+    return course;
+
+  } catch (error) {
+    console.error('Error scraping Udemy course:', error);
+    if (page) await page.close();
+    throw error;
   }
-
-  // Helper method to clean text
-  cleanText(text) {
-    return text ? text.trim().replace(/\s+/g, ' ') : '';
-  }
-
-  // Helper method to extract number from string
-  extractNumber(text) {
-    const match = text?.match(/\d+(\.\d+)?/);
-    return match ? parseFloat(match[0]) : 0;
-  }
+}
 }
 
 module.exports = ScraperService;
