@@ -1,8 +1,6 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
-const { ClerkExpressWithAuth } = require('@clerk/clerk-sdk-node');
-
 const connectDB = require('./Config/connectdb.js');
 const userRoutes = require('./routes/userroutes');
 const scraperRoutes = require('./routes/scraper');
@@ -16,7 +14,6 @@ connectDB();
 
 // Clerk middleware must be added before routes
 app.use(clerkMiddleware());
-
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -26,7 +23,6 @@ app.use('/api', userRoutes);
 
 const chatbotRoutes = require('./routes/chatbot');
 app.use('/api/chatbot', chatbotRoutes);
-app.use('/api', clerk, userRoutes);
 
 
 // Error handling middleware
