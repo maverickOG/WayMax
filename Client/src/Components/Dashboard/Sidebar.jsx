@@ -39,14 +39,13 @@ const Sidebar = () => {
     {
       icon: User,
       label: "Profile",
-      path: "/profile",
       activeColor: "#C1BEFA",
       onClick: () => setShowUserProfile(true)
     },
     {
       icon: HelpCircle,
       label: "FAQ",
-      path: "/faq",
+      path: "/faqs",
       activeColor: "#7EBB94"
     }
   ];
@@ -67,31 +66,53 @@ const Sidebar = () => {
       <nav className="flex-1 p-4">
         <ul className="space-y-2">
           {navigationItems.map((item) => {
-            const isActive = isActivePath(item.path);
+            const isActive = item.path ? isActivePath(item.path) : false;
             const Icon = item.icon;
+
+            const content = (
+              <>
+                <Icon 
+                  className={`w-5 h-5 mr-3 ${isActive ? 'text-gray-800' : 'text-gray-600'}`}
+                />
+                <span className={`${isActive ? 'text-gray-800' : 'text-gray-600'}`}>
+                  {item.label}
+                </span>
+              </>
+            );
+
+            const className = `
+              flex items-center px-4 py-3 rounded-lg transition-all duration-200
+              ${isActive ? 'bg-opacity-20 font-medium' : 'hover:bg-gray-100'}
+            `;
+
+            if (item.onClick) {
+              return (
+                <li key={item.label}>
+                  <button
+                    onClick={item.onClick}
+                    className={className}
+                    style={{
+                      backgroundColor: isActive ? item.activeColor : 'transparent',
+                      width: '100%',
+                      textAlign: 'left'
+                    }}
+                  >
+                    {content}
+                  </button>
+                </li>
+              );
+            }
 
             return (
               <li key={item.label}>
                 <Link
                   to={item.path}
-                  onClick={item.onClick}
-                  className={`
-                    flex items-center px-4 py-3 rounded-lg transition-all duration-200
-                    ${isActive 
-                      ? 'bg-opacity-20 font-medium' 
-                      : 'hover:bg-gray-100'
-                    }
-                  `}
+                  className={className}
                   style={{
                     backgroundColor: isActive ? item.activeColor : 'transparent',
                   }}
                 >
-                  <Icon 
-                    className={`w-5 h-5 mr-3 ${isActive ? 'text-gray-800' : 'text-gray-600'}`}
-                  />
-                  <span className={`${isActive ? 'text-gray-800' : 'text-gray-600'}`}>
-                    {item.label}
-                  </span>
+                  {content}
                 </Link>
               </li>
             );
@@ -101,11 +122,11 @@ const Sidebar = () => {
 
       {showUserProfile && (
         <div 
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center"
+          className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50"
           onClick={() => setShowUserProfile(false)}
         >
           <div 
-            className="bg-white rounded-lg p-4"
+            className="relative"
             onClick={(e) => e.stopPropagation()}
           >
             <UserProfile />
