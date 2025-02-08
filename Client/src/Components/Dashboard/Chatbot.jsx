@@ -1,23 +1,46 @@
 import { useState } from 'react';
 import { X, Send } from 'lucide-react';
+import axios from 'axios'; // Make sure to import axios
 
 const Chatbot = ({ isOpen, onClose }) => {
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState([
     { text: "Hello! I'm your AI learning assistant. How can I help you today?", isBot: true }
   ]);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const sendMessage = (e) => {
+  const sendMessage = async (e) => {
     e.preventDefault();
     if (message.trim()) {
+      // Add user message to chat
       setMessages(prev => [...prev, { text: message, isBot: false }]);
-      setMessage('');
-      setTimeout(() => {
+      
+      // Show loading state
+      setIsLoading(true);
+      
+      try {
+        // Make API call to your backend
+        const response = await axios.post('http://localhost:3000/api/chatbot/chat', {
+          message: message,
+          sessionId: 'user123' // You might want to generate this dynamically
+        });
+
+        // Add bot response to chat
         setMessages(prev => [...prev, { 
-          text: "I'm analyzing your learning path and will suggest relevant resources shortly.", 
+          text: response.data.response, 
           isBot: true 
         }]);
-      }, 1000);
+      } catch (error) {
+        console.error('Chat error:', error);
+        // Show error message in chat
+        setMessages(prev => [...prev, { 
+          text: "Sorry, I encountered an error. Please try again.", 
+          isBot: true 
+        }]);
+      } finally {
+        setIsLoading(false);
+        setMessage('');
+      }
     }
   };
 
@@ -44,6 +67,15 @@ const Chatbot = ({ isOpen, onClose }) => {
               {msg.text}
             </div>
           ))}
+          {isLoading && (
+            <div className="bg-[#E7E8FC] p-3 rounded-xl max-w-[80%] mr-auto">
+              <div className="flex space-x-2">
+                <div className="w-2 h-2 bg-gray-500 rounded-full animate-bounce" />
+                <div className="w-2 h-2 bg-gray-500 rounded-full animate-bounce delay-100" />
+                <div className="w-2 h-2 bg-gray-500 rounded-full animate-bounce delay-200" />
+              </div>
+            </div>
+          )}
         </div>
 
         <form onSubmit={sendMessage} className="mt-4">
@@ -54,10 +86,14 @@ const Chatbot = ({ isOpen, onClose }) => {
               onChange={(e) => setMessage(e.target.value)}
               placeholder="Type your message..."
               className="flex-1 bg-[#E7E8FC]/20 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#C1BEFA]"
+              disabled={isLoading}
             />
             <button
               type="submit"
-              className="p-2 bg-[#C1BEFA] rounded-lg hover:bg-[#C1BEFA]/90 transition-colors"
+              className={`p-2 bg-[#C1BEFA] rounded-lg transition-colors ${
+                isLoading ? 'opacity-50 cursor-not-allowed' : 'hover:bg-[#C1BEFA]/90'
+              }`}
+              disabled={isLoading}
             >
               <Send className="w-5 h-5 text-white" />
             </button>

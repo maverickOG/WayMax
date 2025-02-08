@@ -1,32 +1,31 @@
 const express = require('express');
 const router = express.Router();
 const { GoogleGenerativeAI } = require('@google/generative-ai');
+const axios = require('axios');
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+const PROMPTREPO_API_KEY = process.env.PROMPTREPO_API_KEY;
+const PROMPTREPO_BASE_URL = 'https://api.promptrepo.com/api/private';
 
 const chatHistories = new Map();
 
-// Initial system prompt to set context
-const INITIAL_PROMPT = `You are an educational advisor and course recommendation expert. Your role is to:
-1. Help users find the best learning path based on their goals and experience
-2. Recommend specific courses and resources
-3. Provide structured learning plans
-4. Answer questions about programming, technology, and career development
+const INITIAL_PROMPT = `You are an educational advisor and course recommendation expert...`; // Your existing prompt
 
-When recommending courses:
-- Ask about user's current skill level if not mentioned
-- Consider time commitment and learning style
-- Suggest free resources when available
-- Provide structured learning paths
-- Break down complex topics into manageable steps
-
-Focus areas:
-- Programming and development
-- Data science and AI
-- Web development
-- Mobile development
-- Cloud computing
-- Cybersecurity`;
+// Helper function to detect if we should use PromptRepo
+async function shouldUsePromptRepo(message) {
+  try {
+    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+    const result = await model.generateContent(`
+      Is this message asking for course recommendations or a learning path? Reply with only "YES" or "NO":
+      "${message}"
+    `);
+    const response = await result.response.text();
+    return response.trim().toUpperCase() === 'YES';
+  } catch (error) {
+    console.error('Detection error:', error);
+    return false;
+  }
+}
 
 router.post('/chat', async (req, res) => {
   try {
@@ -36,9 +35,44 @@ router.post('/chat', async (req, res) => {
       return res.status(400).json({ error: 'Session ID is required' });
     }
 
+    // Check if we should use PromptRepo
+    const usePromptRepo = await shouldUsePromptRepo(message);
+
+    if (usePromptRepo) {
+      try {
+        // Try PromptRepo first
+        const promptRepoResponse = await axios.post(
+          `${PROMPTREPO_BASE_URL}/waymax-courserecommendationstrainingdata`,
+          [{
+            goal: message,
+            experience_level: "any",
+            time_available: "flexible",
+            preferred_platform: "any",
+            learning_style: "any"
+          }],
+          {
+            headers: {
+              'Content-Type': 'application/json',
+              'x-api-key': PROMPTREPO_API_KEY
+            }
+          }
+        );
+
+        res.json({ 
+          response: promptRepoResponse.data,
+          sessionId: sessionId,
+          source: 'promptrepo'
+        });
+        return;
+      } catch (promptRepoError) {
+        console.log('PromptRepo failed, falling back to Gemini:', promptRepoError);
+        // Continue to Gemini if PromptRepo fails
+      }
+    }
+
+    // Default Gemini behavior
     const model = genAI.getGenerativeModel({ model: "gemini-pro" });
 
-    // Get or create chat history
     if (!chatHistories.has(sessionId)) {
       const chat = model.startChat({
         history: [{
@@ -54,15 +88,13 @@ router.post('/chat', async (req, res) => {
     }
 
     const chat = chatHistories.get(sessionId);
-    
-    // Send message with correct parts format
     const result = await chat.sendMessage([{ text: message }]);
     const response = await result.response;
-    const text = response.text();
     
     res.json({ 
-      response: text,
-      sessionId: sessionId
+      response: response.text(),
+      sessionId: sessionId,
+      source: 'gemini'
     });
 
   } catch (error) {
@@ -71,11 +103,42 @@ router.post('/chat', async (req, res) => {
   }
 });
 
-// Simplified learning path endpoint
+// Modified learning path endpoint to try PromptRepo first
 router.post('/learning-path', async (req, res) => {
   try {
     const { goal, experience, timeCommitment, sessionId } = req.body;
     
+    try {
+      // Try PromptRepo first
+      const promptRepoResponse = await axios.post(
+        `${PROMPTREPO_BASE_URL}/waymax-learningpathstrainingdata`,
+        [{
+          career_goal: goal,
+          current_skills: experience,
+          time_commitment: timeCommitment,
+          preferred_learning_style: "practical",
+          target_completion: "6 months"
+        }],
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': PROMPTREPO_API_KEY
+          }
+        }
+      );
+
+      res.json({ 
+        response: promptRepoResponse.data,
+        sessionId: sessionId,
+        source: 'promptrepo'
+      });
+      return;
+    } catch (promptRepoError) {
+      console.log('PromptRepo failed, falling back to Gemini:', promptRepoError);
+      // Continue to Gemini if PromptRepo fails
+    }
+
+    // Fallback to original Gemini behavior
     const prompt = `Create a detailed learning path for someone with the following:
     Goal: ${goal}
     Current Experience: ${experience}
@@ -94,7 +157,8 @@ router.post('/learning-path', async (req, res) => {
     
     res.json({ 
       response: response.text(),
-      sessionId: sessionId
+      sessionId: sessionId,
+      source: 'gemini'
     });
   } catch (error) {
     console.error('Learning path error:', error);
