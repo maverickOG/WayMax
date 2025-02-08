@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { useUser, SignIn, SignUp } from "@clerk/clerk-react";
 import { useNavigate } from "react-router-dom";
+import littleThingsImage from "../Assets/littlethings.png";
 
 const LandingPage = () => {
   const [isVisible, setIsVisible] = useState(false);
@@ -159,33 +160,83 @@ const LandingPage = () => {
   ];
 
   // Modal Components
-  const SignInModal = () => (
-    <div
-      className={`fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 ${showSignInModal ? "" : "hidden"}`}
-    >
-      <div>
-        <button
-          onClick={() => setShowSignInModal(false)}
-          className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
-        ></button>
-        <SignIn />
-      </div>
-    </div>
-  );
+  const SignInModal = () => {
+    useEffect(() => {
+      const handleKeyDown = (event) => {
+        if (event.key === "Escape") {
+          setShowSignInModal(false);
+        }
+      };
 
-  const SignUpModal = () => (
-    <div
-      className={`fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 ${showSignUpModal ? "" : "hidden"}`}
-    >
-      <div>
-        <button
-          onClick={() => setShowSignUpModal(false)}
-          // className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
-        ></button>
-        <SignUp />
+      const handleClickOutside = (event) => {
+        const modalContent = document.getElementById("signInModalContent");
+        if (modalContent && !modalContent.contains(event.target)) {
+          setShowSignInModal(false);
+        }
+      };
+
+      document.addEventListener("keydown", handleKeyDown);
+      document.addEventListener("mousedown", handleClickOutside);
+
+      return () => {
+        document.removeEventListener("keydown", handleKeyDown);
+        document.removeEventListener("mousedown", handleClickOutside);
+      };
+    }, []);
+
+    return (
+      <div
+        className={`fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 ${showSignInModal ? "" : "hidden"}`}
+      >
+        <div id="signInModalContent" className="relative">
+          <button
+            onClick={() => setShowSignInModal(false)}
+            className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
+          ></button>
+          <SignIn />
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
+
+  const SignUpModal = () => {
+    useEffect(() => {
+      const handleKeyDown = (event) => {
+        if (event.key === "Escape") {
+          setShowSignUpModal(false);
+        }
+      };
+
+      const handleClickOutside = (event) => {
+        const modalContent = document.getElementById("signUpModalContent");
+        if (modalContent && !modalContent.contains(event.target)) {
+          setShowSignUpModal(false);
+        }
+      };
+
+      document.addEventListener("keydown", handleKeyDown);
+      document.addEventListener("mousedown", handleClickOutside);
+
+      return () => {
+        document.removeEventListener("keydown", handleKeyDown);
+        document.removeEventListener("mousedown", handleClickOutside);
+      };
+    }, []);
+
+    return (
+      <div
+        className={`fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 ${showSignUpModal ? "" : "hidden"}`}
+      >
+        <div id="signUpModalContent" className="relative">
+          <button
+            onClick={() => setShowSignUpModal(false)}
+            className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
+          ></button>
+          <SignUp />
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div className="w-full relative">
@@ -295,9 +346,13 @@ const LandingPage = () => {
             </p>
           </div>
           <div className="relative">
-            {/* Placeholder for hero illustration */}
-            <div className="w-full h-full bg-amber-200/20 rounded-2xl flex items-center justify-center">
-              <p className="text-gray-500">Hero Illustration</p>
+            {/* Image for hero illustration */}
+            <div className="w-full h-full rounded-2xl flex items-center justify-center">
+              <img
+                src={littleThingsImage}
+                alt="Hero Illustration"
+                className="w-full h-full object-cover rounded-2xl"
+              />
             </div>
           </div>
         </div>
