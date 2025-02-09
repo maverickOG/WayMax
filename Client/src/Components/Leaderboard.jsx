@@ -18,7 +18,7 @@
 
 //       try {
 //         const token = await session.getToken(); // Get the token from session
-//         const response = await fetch('http://waymax-production.up.railway.app//api/leaderboard', {
+//         const response = await fetch('http://waymax-production.up.railway.app/api/leaderboard', {
 //           headers: {
 //             'Authorization': `Bearer ${token}`,
 //           },

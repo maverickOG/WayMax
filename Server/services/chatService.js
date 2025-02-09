@@ -1,7 +1,7 @@
 // services/ChatService.js
 import axios from 'axios';
 
-const API_URL = 'http://waymax-production.up.railway.app//api';
+const API_URL = 'http://waymax-production.up.railway.app/api';
 
 export const ChatService = {
   sendMessage: async (message, sessionId) => {
